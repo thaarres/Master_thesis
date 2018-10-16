@@ -1,0 +1,367 @@
+\appendix
+\chapter{The MVA Trainer and MVAComputer}
+\label{app:MVATrainer}
+
+\section{Implementation of additional vertex categories}
+
+In order to further investigate the observed effect when passing the new Reco and RecoReco vertex trainings, the trainings are passed separately for validation. This would make it clear if one of the trainings has failed. Figure \ref{fig:RecoAndRecoReco} shows the performance when passing the new RecoVertex training (Nr. SV==1) only and the same when passing only the RecoRecoVertex training. Here they both reach the exact same maximum bb efficiency of around 32\%. As 32\% of the bb jets fall in the RecoVertex (SV==1) category, it appears as both trainings are tagging the same Reco jets, not knowing what do do with No, Pseudo and RecoReco jets. However, when combining the two trainings (red) there is a few percent gain in bb/b efficiency, indicating that they are not tagging the exact same jets in all cases. The performance using the default RecoVertex category it there for comparison.
+\begin{figure}[th!b]
+\begin{center}
+\includegraphics[width=0.49\textwidth]{RecoAndRecoReco}
+\end{center}
+\caption{Performance using the default RecoVertex (yellow) category versus using the new Reco (green) training only, RecoReco (blue) or a combination of them both (red). The combined Reco+RecoReco curve (red) should be equal or better than using the default RecoVertex category only, so something is clearly going wrong when combining the trainings.}
+\label{fig:RecoAndRecoReco}
+\end{figure}
+To check what jets the Reco and RecoRecoVertex training are actually tagging, the performance of the Reco and RecoReco trainings separately on jets containing only one secondary vertex, and performance on jets containing only more than one secondary vertex have been studied. The results are shown in Figure \ref{fig:RecoRecoRecoOnlyVali}.
+\begin{figure}[th!b]
+\begin{center}
+\includegraphics[width=0.49\textwidth]{RecoAndRecoReco_RecoRecoRecoOnlyVali}
+\end{center}
+\caption{Performances for the Reco (green), RecoReco (red) and the combined Reco+RecoReco (yellow) trainings validated on jets with no, a pseudo or \textit{only one} secondary vertex reconstructed. The blue, black and purple curves are the corresponding trainings validated on jets with no, pseudo or \textit{multiple} secondary vertices reconstructed. The dedicated Reco training performs best for jets containing only one secondary vertex and the dedicated RecoReco training performs best on jets containing multiple secondary vertices. However, both trainings seem to be tagging both jet types. The fact that they both reach the exact same bb tagging efficiency indicates they are even tagging the same jets.The yellow and purple curves are the efficiency combining the Reco and RecoReco trainings, which ideally should correspond or improve the training using the default RecoVertex category (cyan).}
+\label{fig:RecoRecoRecoOnlyVali}
+\end{figure}
+The denominator is using all bb jets in the sample. Using only the Reco or only the RecoReco training in the validation reaches a maximum bb efficiency of around 32\% for both taggers, which is expected as 68\% of the jets fall in the No, Pseudo and RecoReco category. However, for jets containing only one secondary vertex, we do not expect the RecoReco training to be used at all. The Reco training seems to perform a bit better than the RecoReco training in this case. The blue, black and purple curves are the corresponding trainings validated on jets with no, pseudo or multiple secondary vertices reconstructed. Here the dedicated RecoReco training performs the same as the training on Reco jets only. Both trainings are again applied to tag jets with multiple secondary vertices. The yellow and purple curves are the efficiency combining the Reco and RecoReco trainings for jets containing one and two SVs respectively, which ideally should correspond or improve the training using only the default RecoVertex category (cyan). Here it is surprising to see that there really is a gain in efficiency by using both trainings, so in some way they do seem to complement each other.\newline
+Between the CSV training experts there is general agreement that when passing a training for jets in the RecoVertex category, this training is only used on RecoVertex jets, and the same for the No and Pseudo categories. However, this is something that has not been properly looked into. If one tries to pass the PseudoVertex training only for instance, this is not allowed in the system as the PseudoVertex category is missing some variables that are defined only in the RecoVertex category and it does not know what to do when being passed a Reco jet. It appears like the trainings for each vertex category is not explicitly used on jets falling in the category it is trained for. The way to move further with the implementation of a RecoReco category, would be to switch the training to the Root TMVA framework. Here adding an additional vertex category should be quite straight forward, and the only problem to overcome would be how to get the training back into the CMS Offline Software for use in analyses. 
+
+
+\section{Available processors}
+The variable preprocessors available within the MVATrainer and MVAComputer framework are:
+\begin{itemize}
+\item ProcMatrix: Linear decorrelation using a matrix rotation defined by Principal Component Analysis (PCA). (lossless)
+\item ProcNormalize: Flattening of value range to [0, 1]. Uses a pdf of all data points to redistribute the values equally in the range. Values outside of the range seen in the training dataset are clamped (lossless with respect to training dataset).
+\item ProcLikelihood (in “individual transformation mode”): Same as for regular ProcLikelihood, except that S/(S + B) is computed for each variable individually and not combined into a single likelihood ratio (lossy if S/(S + B) distribution is not strictly increasing or decreasing).
+\end{itemize}
+And the following classifiers:
+\begin{itemize}
+\item ProcLikelihood: Combined Likelihood Ratio using cubic spline representation of the variables’ pdfs. Assumes uncorrelated variables and is a S/(S + B) combination of individual variable probabilities.
+\item ProcLinear: A simple linear discriminant from a $\chi^2$ regression fit (Fisher’s Discriminant).
+\item ProcMLP: Available via plugin: An Artificial Neural Network (ANN) from the MLP- fit package, a simple feed-forward network with configurable hidden layers, logistic activation function and several backpropagation learning methods.
+\item ProcTMVA: Access to all methods from ROOT’s Toolkit for Multivariate Analysis Techniques (TMVA) package.
+\end{itemize}
+\newpage
+\section{Biases}
+The biases (see Section \ref{sec:retraining/bias}) applied to the different vertex categories are listed in Table \ref{tab:biases} for the different vertex training categories and for bb versus b and bb versus c/light.
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{| l | c |}
+\hline
+\multicolumn{2}{|c|}{NoVertex, bb vs.\ b}\\
+\hline
+Bin&Bias\\
+\hline
+0&0.713432\\
+1&0.809937\\
+2&0.79426\\
+3&0.35448\\
+4&0.355709\\
+5&0.412422\\
+6&0.177686\\
+7&0.213814\\
+8&0.405193\\
+9&0.153168\\
+10&0.202404\\
+11&0.21004\\
+12&1.03158\\
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{| l | c |}
+\hline
+\multicolumn{2}{|c|}{NoVertex, bb vs.\ cdusg}\\
+\hline
+Bin&Bias\\
+\hline
+0&0.206692\\
+1&0.267246\\
+2&0.33831\\
+3&0.0834466\\
+4&0.101435\\
+5&0.162792\\
+6&0.0525007\\
+7&0.074651\\
+8&0.177797\\
+9&0.0540862\\
+10&0.0808679\\
+11&0.0819152\\
+12&0.130702\\
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{| l | c |}
+\hline
+\multicolumn{2}{|c|}{PseudoVertex, bb vs.\ b}\\
+\hline
+Bin&Bias\\
+\hline
+0&1.16637\\
+1&0.86864\\
+2&0.595255\\
+3&0.465573\\
+4&0.714126\\
+5&1.62803\\
+6&0.342521\\
+7&0.494313\\
+8&0.79881\\
+9&0.340009\\
+10&0.565412\\
+11&0.69634\\
+12&0.859649\\
+\hline
+\end{tabular}
+\quad
+\newline
+\\[2ex]
+\begin{tabular}{| l | c |}
+\hline
+\multicolumn{2}{|c|}{PseudoVertex, bb vs.\ cdusg}\\
+\hline
+Bin&Bias\\
+\hline
+0&3.43547\\
+1&3.93322\\
+2&3.25316\\
+3&0.844587\\
+4&1.45975\\
+5&3.11298\\
+6&0.659249\\
+7&1.01644\\
+8&1.9881\\
+9&0.512227\\
+10&0.898033\\
+11&0.693165\\
+12&0.85773\\
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{| l | c |}
+\hline
+\multicolumn{2}{|c|}{RecoVertex, bb vs.\ b}\\
+\hline
+Bin&Bias\\
+\hline
+0&1.09397\\
+1&1.09548\\
+2&1.17737\\
+3&1.20229\\
+4&1.22918\\
+5&1.24992\\
+6&1.33354\\
+7&1.35355\\
+8&1.35089\\
+9&1.40886\\
+10&1.41911\\
+11&1.34141\\
+12&1.00548\\
+\hline
+\end{tabular}
+\quad
+\begin{tabular}{| l | c |}
+\hline
+\multicolumn{2}{|c|}{RecoVertex, bb vs.\ cdusg}\\
+\hline
+Bin&Bias\\
+\hline
+0&7.20115\\
+1&9.23489\\
+2&9.50078\\
+3&4.60525\\
+4&5.1248\\
+5&4.78792\\
+6&4.01089\\
+7&3.92053\\
+8&3.48562\\
+9&3.6915\\
+10&3.89914\\
+11&3.4308\\
+12&3.56707\\
+\hline
+\end{tabular}
+\end{center}
+\caption{The biases applied to the different trainings as described in Section \ref{sec:retraining/bias}}.
+\label{tab:biases}
+\end{table}
+
+% \newpage
+% \section{Gluon splitting variable distributions}
+% Additional variable distributions for bb jets coming from gluon splitting versus bb jets from $H\rightarrow b\bar{b}$ are shown in Figure \ref{fig:VarsGluonSplitting2}.
+% \begin{figure}[th!b]
+%\begin{center}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_jetPt}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_flightDistance2dSig}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_jetNSecondaryVertices}\\
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_trackDecayLenVal}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_trackJetDist}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_trackPtRatio}\\
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_trackPtRel}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_trackSip3dSigAboveCharm}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_trackSip3dSig}\\
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_trackSumJetDeltaR}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_vertexMass}
+%\includegraphics[width=0.31\textwidth]{QCDvsRadion_BB_linear_vertexNTracks}
+%\end{center}
+%\caption{Comparison of variable distributions for g$\rightarrow b\bar{b}$ and H$\rightarrow b\bar{b}$.}
+%\label{fig:VarsGluonSplitting2}
+%\end{figure}
+
+\section{$\mathrm{g}$$\rightarrow$$\mathrm{b\bar{b}}$ versus $\mathrm{H}$$\rightarrow$$\mathrm{b\bar{b}}$ additional plots}
+\begin{figure}[th!b]
+\begin{center}
+\includegraphics[width=0.49\textwidth]{HtoBBvsGtoBB}
+\includegraphics[width=0.49\textwidth]{QCDbbVsRadionBB_log}
+\end{center}
+\caption{Tagging efficiency for bb jets from gluon splitting versus bb jets from a Higgs decay for all jets (right) and for jets with 200 GeV $<p_T<$ 700 GeV (log scale).}
+\label{fig:HtoBBvsGtoBB}
+\end{figure}
+\newpage
+\section{Technical training description}
+Some technical training information and implementation of the different processors is explained in the following.
+The Ntuplizer used to generate the flat training trees can be found in RecoBTau/JetTagMVALearning/test/BBtagCSVMLPIVF/VariableExtraction/VariableExtractor \_IVF\_cfg.py. The VariableExtractor is run locally on AOD samples with Crab at PSI Tier 3 and the output files stored directly at the T3 Storage Element. The files are then merged and copied to your local workspace by running mergeFromStorage.sh. This script also skims the cdusg NoVertex samples to keep only 1/20 of the events as this category is very high on statistics. After having merged the files, all samples are skimmed keeping only 50 000 jets in each $p_T$-$\eta$ training category. In pratice, the bias is computed by running RecoBTau/JetTagMVALearning/test/BBtag\_CSVMLPIVF/biasForXml.cpp. This takes as input flat trees (one for each vertex category and flavour) produced from the sample one wishes to calculate the bias from. It computes the bias and stores it in different text (.txt) files; one for each vertex category and for bb vs. b/bb vs. cdusg separately. Following is an example for the bb versus b training in the RecoVertex category:
+\vspace{5mm}\newline
+ $\mathrm{<bias>0.814042</bias>}\\
+ \mathrm{<bias>0.880306</bias>}\\
+ \mathrm{<bias>0.931248</bias>}\\
+ \mathrm{<bias>0.609174</bias>}\\
+ \mathrm{<bias>0.747541</bias>}\\
+ \mathrm{<bias>0.860736</bias>}\\
+ \mathrm{<bias>0.648791</bias>}\\
+ \mathrm{<bias>0.707409</bias>}\\
+ \mathrm{<bias>0.859501</bias>}\\
+ \mathrm{<bias>0.676458</bias>}\\
+ \mathrm{<bias>0.786535</bias>}\\
+ \mathrm{<bias>0.844379</bias>}\\
+ \mathrm{<bias>0.495463</bias>}\\$
+ \vspace{5mm}\newline
+ The text files are stored in the same directory where the code is run from. This bias is then manually added to the XML steering files, described further in Section \ref{sec:retraining/xml}.
+ Storing target and $p_T-\eta$ weight is done by running RecoBTau/JetTagMVALearning/plugins/JetTagMVATreeTrainer.cc. This code takes the flat training trees and the $p_T-\eta$ histograms, computes the weight for each jet, creates a new tree and stores the weight and target. The TreeTrainer is configured through xml steering files, one for each vertex category and for bb vs. b and bb vs. dusg separately. The XML files defines the signal and background flavour and passes two input trees; signal and background. The final output is 6 different root files in total: RecoVertex\_BB\_B/CDUSG, PseudoVertex\_BB\_B/CDUSG and NoVertex\_BB\_B/CDUSG containing the necessary information to perform the training. 
+The signal and background trees for the separate flavour trainings (bb vs. b and bb vs. dusg) are merged into a single tree with the jet target (signal (1) or background (0)) stored in a separate branch. The  $p_T-\eta$ weight for each jet is also computed and stored. Then the trees are passed to the MVATrainer to perform the training.
+The MVATrainer is fully steered through an XML configuration file. The first step in the XML is the declaration of the training variables:
+\vspace{5mm}\newline
+$\mathrm{<input id="input">}$\\
+		$\mathrm{<var name="jetPt" multiple="false" optional="false"/>}$\\
+		$\mathrm{</input>}$\\
+		\vspace{5mm}\newline
+Here the name of the variable is declared and two options are set: ``multiple'' means if the variable is allowed to appear multiple times and ``optional'' means if the variable can be omitted. The next step is the assignment to $p_T$-$\eta$ bins:
+\vspace{5mm}\newline
+$\mathrm{<processor id="proc1" name="ProcCategory">}$\\
+$\mathrm{		<input>}$\\
+$\mathrm{			<var source="input" name="jetPt"/>}$\\
+$\mathrm{			<var source="input" name="jetEta"/>}$\\
+$\mathrm{		</input>}$\\
+$\mathrm{		<config>}$\\
+$\mathrm{                        <group><box><range max="40"/><range min="-1.2" max="1.2"/></box></group>}$\\
+$\mathrm{                        <group><box><range max="40"/><range min="-2.1" max="2.1"/></box></group>}$\\
+$\mathrm{                        <group><box><range max="40"/><range/></box></group>}$\\
+$\mathrm{                        		</config>}$\\
+$\mathrm{		<output>}$\\
+$\mathrm{			<var name="var1"/>}$\\
+$\mathrm{		</output>}$\\
+$\mathrm{	</processor>}\\$
+\vspace{5mm}\newline
+Where the first range sets the $p_T$ maximum/minimum and the second sets the $\eta$ range for a given bin. Next the variables are all normalized to a value between 0 and 1 using \textbf{ProcNormalize}:
+\vspace{5mm}\newline
+$\mathrm{	<processor id="proc3" name="ProcNormalize">}$\\
+		$\mathrm{<input>}$\\
+		$\mathrm{	<var source="input" name="trackSip3dSig"/>}$\\
+$\mathrm{<config>}$\\
+$\mathrm{			<pdf smooth="3" size="500" lower="-80" upper="150"/> <!-- trackSip3dSig -->}$\\
+			\vspace{5mm}\newline
+One can provide the range or let it be automatically calculated. The final step of the preprocessing is the \textbf{ProcSplitter} processor. The \textbf{ProcSplitter} takes variables that are stored as vectors and therefore occur multiple times, like track-by-track related variables, and split them into separate entities:\vspace{5mm}\newline
+$\mathrm{<processor id="proc4" name="ProcSplitter">}$\\
+$\mathrm{		<input>}$\\
+$\mathrm{			<var source="proc3" name="var3"/>}$\\
+$\mathrm{		</input>}$\\
+$\mathrm{		<config>}$\\
+ $\mathrm{                     <select first="3"/>}$\\
+$\mathrm{		</config>}$\\
+$\mathrm{		<output>}$\\
+$\mathrm{			<var name="var1"/>}$\\
+$\mathrm{			<var name="var2"/>}$\\
+$\mathrm{			<var name="var3"/>}$\\
+$\mathrm{			<var name="var4"/>}$\\
+$\mathrm{		</output>}$\\
+$\mathrm{	</processor>}$\\
+\vspace{5mm}\newline
+ Here variable 3 is split into four entities. Then the Multilayer perceptron is defined and the training variables passed:\vspace{5mm}\newline
+$\mathrm{<processor id="proc16" name="ProcMLP">}\\
+\mathrm{		<input>}\\
+\mathrm{			<var source="proc11" name="var1"/>}\\
+\mathrm{			<var source="proc11" name="var2"/>}\\
+\mathrm{			<var source="proc11" name="var4"/>}\\
+\mathrm{		</input>}\\
+\mathrm{		<config>}\\
+%<!--			<config steps="50" boost="-1" limiter="0">4:3:4</config> the first hidden layer has 4 neurons, the second 3, the third 4, boost and limiter have default values now--> 
+\mathrm{			<config steps="100" boost="-1" limiter="0">44</config>}\\
+\mathrm{		</config>}\\
+\mathrm{		<output>}\\
+\mathrm{			<var name="var1"/>}\\
+\mathrm{		</output>}\\
+\mathrm{	</processor>}\\ $
+\vspace{5mm}\newline
+Here ``config steps'' defines how many training iterations should be run, ''limiter'' can be used to reduce the amount of data points used for training (here set to 0. No reduction). ``44'' is the number of neurons to use, here for one layer. If one wishes to use more layers, they can be defined as ``4:3:4''. That gives a network with three hidden layers consisting of 4, 3, and 4 neurons respectively.
+ \section{List of samples}
+ \begin{sidewaystable}
+\begin{center}
+  \begin{tabular}{|l|c|}
+    \hline
+Sample& \#events \\ \hline
+\scriptsize RadionToHH\_4b\_M-1000\_TuneZ2star\_8TeV-Madgraph\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V19-v1/AODSIM& $\sim$100k\\ 
+\scriptsize RadionToHH\_4b\_M-1100\_TuneZ2star\_8TeV-Madgraph\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V19-v1/AODSIM&$\sim$100k\\ 
+\scriptsize GravitonToHH\_4b\_M-1000\_TuneZ2star\_8TeV-Madgraph\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7C-v1/AODSIM&$\sim$20k\\ 
+\scriptsize GravitonToHH\_4b\_M-1500\_TuneZ2star\_8TeV-Madgraph\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7C-v1/AODSIM&$\sim$20k\\ 
+\scriptsize GravitonToHH\_4b\_M-2000\_TuneZ2star\_8TeV-Madgraph\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7C-v1/AODSIM&$\sim$20k\\
+\hline
+\hline
+\scriptsize   QCD\_Pt-15to30\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v1/AODSIM& $\sim$10M\\
+\scriptsize   QCD\_Pt-30to50\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v2/AODSIM&$\sim$6M\\
+\scriptsize   QCD\_Pt-50to80\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v2/AODSIM&$\sim$6M\\
+\scriptsize   QCD\_Pt-80to120\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v3/AODSIM&$\sim$6M\\
+\scriptsize   QCD\_Pt-120to170\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v3/AODSIM&$\sim$6M\\
+\scriptsize   QCD\_Pt-170to300\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v2/AODSIM&$\sim$6M\\
+\scriptsize   QCD\_Pt-300to470\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v1/AODSIM&$\sim$3M\\
+\scriptsize   QCD\_Pt-470to600\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v2/AODSIM&$\sim$4M\\
+\scriptsize   QCD\_Pt-600to800\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v2/AODSIM&$\sim$4M\\
+\scriptsize   QCD\_Pt-800to1000\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v2/AODSIM&$\sim$4M\\
+\scriptsize   QCD\_Pt-1000to14000\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v1/AODSIM&$\sim$2M\\
+\scriptsize   QCD\_Pt-1400to1800\_TuneZ2star\_8TeV\_pythia6/Summer12\_DR53X-PU\_S10\_START53\_V7A-v1/AODSIM&$\sim$2M\\
+\hline
+  \end{tabular}
+  \caption{Samples used in the training and evaluation of the double b-tagging algorithm}
+      \label{table:mc2}
+\end{center}
+\end{sidewaystable}
+
+% As most of the bb jets have a reconstructed secondary vertex (around 92\%), we focus on the RecoVertex  category in order to improve the training for the new vertex categories. We want to look at the performance using the default RecoVertex category and when using the new Reco+RecoReco training categories only, disregarding the No and PseudoVertex trainings as only 8\% of the bb jets enter into these categories. Here the training has been performed using only jets with at least one secondary vertex, while the validation uses all jets. The maximum bb efficiency the algorithms can reach is limited by the number of jets that fall in the No, Pseudo and Reco/RecoReco category as the efficiency uses all bb jets in the denominator. Passing trainings for single vertex categories will leave ``unidentifiable'' jets in a discriminant underflow bin (the algorithm does not know that to do with a PseudoVertex jet if only the RecoVertex training is passed). Figure \ref{fig:TrainingWithAndWithoutRecoReco3} shows the performances using the default RecoVertex category and the new Reco+RecoReco training categories only. The performance using the default RecoVertex category, which uses all jets with at least one secondary vertex, is a lot better than when using all default training categories. This is to be expected as the bb versus b discrimination power in the No and Pseudo vertex category is severely limited by statistics. Here the maximum b jet efficiency only reaches around 70\% as 30\% of the jets fall in the NoVertex and PseudoVertex categories and therefore are unclassified by the double b-tagging algorithm. Unclassified jets end up in a discriminant underflow bin. Around 8\% of the bb jets fall in the No and PseudoVertex categories and the bb jet tagging efficiency therefore has a cut off at 92\%. The bb tagging efficiency corresponding to a 10\% fake rate is around 75\%. When passing the Reco+RecoReco trainings only, however, something seems to fail within the framework. Here the maximum bb efficiency drops down to around 35\% despite the fact that 60\% percent of the bb jets fall in the RecoRecoVertex category and 32\% in the Reco category. Now almost 60\% of the bb jets in addition to the 8\% in the Pseudo and NoVertex categories are unclassifiable for the algorithm end up in a discriminant underflow bin.  This keeps the Reco+RecoReco combined trainings from reaching the same  92\% bb efficiency point as the default RecoVertex category with no cut on the discriminant.  Also the maximum b jet efficiency drops by around 10\%. 
+% \begin{figure}[th!b]
+%\begin{center}
+%\includegraphics[width=0.59\textwidth]{TrainingWithAndWithoutRecoReco}
+%\end{center}
+%\caption{The bb tagging efficiency versus b jet mistagging rate using the default RecoVertex (cyan) and the new Reco+RecoReco (blue) training categories . The performances using all categories (red and green) are the same as shown in Figure \ref{fig:TrainingWithAndWithoutRecoReco2}  and are there for comparison. Something fail when passing only the Reco+RecoReco trainings.}
+%\label{fig:TrainingWithAndWithoutRecoReco}
+%\end{figure}
+%In order to further investigate the observed effect when passing the new Reco and RecoReco vertex trainings, the trainings are passed separately for validation. This would make it clear which training is malfunctioning. Figure \ref{fig:RecoAndRecoReco} shows the performance when passing the new RecoVertex training only (Nr. SV==1) only and the same when passing only the RecoRecoVertex training. Here they both reach the exact same maximum bb efficiency of around 32\%. As 32\% of the bb jets fall in the RecoVertex (SV==1) category, it could look like both trainings are tagging the same Reco jets, not knowing what do do with No, Pseudo and RecoReco jets. However, when combining the two trainings (red) there is a few percent gain in bb/b efficiency, indicating that they are not tagging the exact same jets in all cases. The performance using the default RecoVertex category it there for comparison.
+%\begin{figure}[th!b]
+%\begin{center}
+%\includegraphics[width=0.49\textwidth]{RecoAndRecoReco}
+%\end{center}
+%\caption{Performance using the default RecoVertex (yellow) category versus using the new Reco (green) training only, RecoReco (blue) or a combination of them both (red). The combined Reco+RecoReco curve (red) should be equal or better than using the default RecoVertex category only, so something is clearly going wrong when combining the trainings.}
+%\label{fig:RecoAndRecoReco}
+%\end{figure}
+%It seems like the RecoReco training is tagging Reco jets and do not know how to classify RecoReco jets. The problem with the validation is that most of the calculations are done in a black box and is difficult for the user to monitor. The validation uses the same code to place jets in vertex categories as the training and generation of training trees uses. The implementation of the new vertex categories has been checked in order to make sure it is imlemented correctly. The number of secondary vertices contained in each jet for the new RecoVertex and RecoRecoVertex categories are shown in Figure \ref{fig:NrSV}. As can be seen from the plots, all Reco jets (left) have one SV only, while jets in the RecoRecoVertex category (right) has two or more secondary vertices.
+%\begin{figure}[th!b]
+%\begin{center}
+%\includegraphics[width=0.49\textwidth]{NrSV_Reco}
+%\includegraphics[width=0.49\textwidth]{NrSV_RecoReco}
+%\end{center}
+%\caption{Number of secondary vertices in each jet for the new RecoVertex (left) and RecoRecoVertex (right) categories.}
+%\label{fig:NrSV}
+%\end{figure}
+%Between the CSV training experts there is general agreement that when passing a training for jets in the RecoVertex category, this training is only used on RecoVertex jets, and the same for the No and Pseudo categories. However, this is something that has not been properly looked into. If one tries to pass the PseudoVertex training only for instance, this is not allowed in the system as the PseudoVertex category is missing some variables that are defined only in the RecoVertex category and it does not know what to do when being passed a Reco jet. So it seems like the trainings for each vertex category is not explicitly used on jets falling in the category it is trained for. In order to investigate this further, the performance has been studied for two different cases: performance of the Reco and RecoReco trainings separately on jets containing only one secondary vertex, and performance on jets containing only more than one secondary vertex. The results are shown in Figure \ref{fig:RecoRecoRecoOnlyVali}.
+%\begin{figure}[th!b]
+%\begin{center}
+%\includegraphics[width=0.49\textwidth]{RecoAndRecoReco_RecoRecoRecoOnlyVali}
+%\end{center}
+%\caption{Performances for the Reco (green), RecoReco (red) and the combined Reco+RecoReco (yellow) trainings validated on jets with no, a pseudo or \textit{only one} secondary vertex reconstructed. The blue, black and purple curves are the corresponding trainings validated on jets with no, pseudo or \textit{multiple} secondary vertices reconstructed. The dedicated Reco training performs best for jets containing only one secondary vertex and the dedicated RecoReco training performs best on jets containing multiple secondary vertices. However, both trainings seem to be tagging both jet types. The fact that they both reach the exact same bb tagging efficiency indicates they are even tagging the same jets.The yellow and purple curves are the efficiency combining the Reco and RecoReco trainings, which ideally should correspond or improve the training using the default RecoVertex category (cyan).}
+%\label{fig:RecoRecoRecoOnlyVali}
+%\end{figure}
+%Here the green, red and yellow curve are the performances for the Reco, RecoReco and the combined Reco+RecoReco trainings respectively validated on jets with no, a pseudo or only one secondary vertex reconstructed. The denominator is all bb jets in the sample (including jets with multiple secondary vertices). Using only the Reco or only the RecoReco training in the validation reaches a maximum bb efficiency of around 32\% for both taggers, which is expected as 68\% of the jets fall in the No, Pseudo and RecoReco category. However, for jets containing only one secondary vertex, we do not expect the RecoReco training to be used at all. The Reco training seems to perform a bit better than the RecoReco training in this case. The blue, black and purple curves are the corresponding trainings validated on jets with no, pseudo or multiple secondary vertices reconstructed. Here the dedicated RecoReco training performs the same as the training on Reco jets only. Both trainings are again applied to tag the multiple SV jets. The yellow and purple curves are the efficiency combining the Reco and RecoReco trainings for jets containing one and t wo SVs respectively, which ideally should correspond or improve the training using only the default RecoVertex category (cyan). Here it is surprising to see that there really is a gain in efficiency by using both trainings, so in some way they do seem to complement each other.\newline
+%The conclusion after discussing with other CSV experts, is that validating trainings separately is not trivial to do in the current framework. The way to move further with the implementation of a RecoReco category, would be to switch the training to the Root TMVA framework. Here adding an additional vertex category should be quite straight forward, and the only problem to overcome would be how to get the training back into the CMS Offline Software for use in analyses. With the high performance achieved using the default vertex categories only, this is however not too much of a concern for the current double b-tagger. Some information regarding additional vertices is stored, though not explicitly, through for instance the vertex mass variable, which takes the track sum of tracks coming from all SVs.\vspace{10mm}\newline

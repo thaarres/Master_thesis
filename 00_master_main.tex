@@ -1,0 +1,94 @@
+\documentclass[11pt,a4paper]{book}
+
+%% change \cleardoublepage command, that empty pages don't get numbered
+\let\Oldclear\cleardoublepage
+\renewcommand{\cleardoublepage}{\newpage\thispagestyle{empty}\Oldclear}
+
+%% special latex tricks
+\usepackage{fancyhdr}         % allow special headers
+\usepackage{color}            % allow colored text
+\usepackage{rotating}         % allow to rotate content
+\usepackage{mdwlist}          % allow for lists with small separation beteween items (eg {itemize*})
+
+%% adding support for nicely formatted SI units
+\usepackage[thinqspace, squaren, pstricks]{SIunits}
+
+%% Specify language to use
+\usepackage[english]{babel}
+% \usepackage[german]{babel}    % for german, including umlauts
+
+%% packages for graphics
+\usepackage{graphicx}         % improved graphicx commands
+\usepackage{subfigure}        % allows subfigures within figure environments
+\usepackage{wrapfig}          % allows to have text wrap around figures
+\usepackage{sidecap}          % allows to put the caption at the side of afigure
+\usepackage{float}            % allow placing floats where I want them ([H])
+
+%% specify where graphics are stored and what extension should be used
+\graphicspath{{img/layout/},{img/content/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+% tables that can span multiple pages and working footnotes
+% \usepackage{longtable}        % mulit-page version of tabular
+% \usepackage{booktabs}         % enhance quality of tables
+\usepackage{ctable}           % environment that allows complex tables (includes booktabs)
+% configure page margins
+\usepackage[
+ a4paper,
+ total={16cm,24cm},
+ top=20mm, left=30mm,
+ headheight=10mm,
+ headsep=10mm,
+ footskip=10mm
+]{geometry}
+
+% configure page style (header, footer, page numbering)
+\pagestyle{headings}
+
+% configure paragraphs
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{0.2cm}
+
+\usepackage{caption}
+\usepackage{amsmath}
+ \usepackage[utf8]{inputenc}
+
+\title{Boosted H}
+\author{Thea Klaeboe Aarrestad}
+\date{}
+
+\usepackage[
+  pdftex,
+ bookmarks=true,
+ urlcolor=blue,
+ linkbordercolor={1 1 1},
+ pdfborder={0 0 0}
+]{hyperref}
+
+\hypersetup{
+  pdfauthor = {Thea Aarrestad},
+  pdftitle = {My Master Thesis Setup},
+  pdfsubject = {},
+  pdfkeywords = {}
+}
+
+\begin{document}
+
+\input{./10_titlepage}
+\input{./11_abstract}
+
+\tableofcontents
+
+\input{./01_master_Intro}
+\input{./02_master_Bquark}
+\input{./03_master_CMStracker}
+\input{./04_master_EventReco}
+\input{./06_master_Samples}
+\input{./06_master_bTag}
+\input{./07_master_Retraining}
+\input{./08_master_Results}
+\input{./08_master_Conclusion}
+\input{./09_master_Appendix}
+\input{./10_master_Bib}
+
+\end{document}
